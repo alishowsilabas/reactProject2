@@ -1,35 +1,55 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import React, { useState, useRef } from "react";
+import notFound from "./assets/404.jpg";
 
-function App() {
-  const [count, setCount] = useState(0)
+const App = () => {
+  const [imagem, setImagem] = useState(null);
+  const [name, setName] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  const inputRef = useRef();
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    setLoading(true);
+
+    const userInput = inputRef.current.value;
+
+    fetch(`https://api.github.com/users/${userInput}`)
+      .then((response) => {
+        if (response.ok) {
+          return response.json();
+        } else {
+          throw new Error();
+        }
+      })
+      .then((data) => {
+        setImagem(data.avatar_url);
+        setName(data.name);
+        setLoading(false);
+      }).catch(() => {
+        setImagem(notFound);
+        setName("Name Not Found");
+        setLoading(false);
+      });
+  };
 
   return (
-    <>
-      <div>
-        <a href="https://vitejs.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.jsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
-}
+    <form
+      onSubmit={handleSubmit}
+      style={{ display: "flex", flexDirection: "column" }}
+    >
+      {!loading ? (
+        <div>
+          <img src={imagem} alt={name} />
+          <h3>{name}</h3>
+        </div>
+      ) : (
+        <div>Loading...</div>
+      )}
+      <input type="text" ref={inputRef} /> {/* Adicione o atributo ref aqui */}
+      <button>Pegar Perfil</button>
+    </form>
+  );
+};
 
-export default App
+export default App;
